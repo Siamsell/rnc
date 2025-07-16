@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étude Application Python/PostgreSQL | Architecture Moderne</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1d2a5f;
+            --primary-dark: #041956;
+            --secondary: #094253;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4bb543;
+            --error: #f94144;
+            --warning: #f8961e;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --radius-sm: 0.25rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: white;
+            background-color: #f5f7ff;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 0 1 rem;
+            color:#f5f7ff;
+        }
+        #conc{
+            color:#f9f6c0;
+        }
+        
+        header {
+           background: linear-gradient(135deg, var(--primary-dark), #240474);
+            color: white;
+            padding: 5rem 0 7rem;
+            text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+            margin-bottom: -3rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to bottom right, transparent 49%, #f5f7ff 50%);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        header p {
+            font-size: 1.25rem;
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            max-width: 700px;
+            color:#ffffff;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        h2 {
+            font-size: 2.2rem;
+            color: var(--primary-dark);
+         font-family: Georgia, 'Times New Roman', Times, serif;
+            margin: 3.5rem 0 2rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200px;
+            height: 6px;
+            background: var(--secondary);
+            border-radius: var(--radius-sm);
+        }
+        
+        h3 {
+            font-size: 1.75rem;
+            color: var(--primary);
+            margin: 2.5rem 0 1.25rem;
+            font-weight: 600;
+        }
+        
+        h4 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin: 1.75rem 0 0.75rem;
+            font-weight: 500;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            color: rgb(0, 0, 0);
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+        
+        a {
+            color: black;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+        
+        ul, ol {
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+            color:black;
+        }
+        
+        li {
+            margin-bottom: 0.75rem;
+            color:black;
+            line-height: 1.6;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            margin: 3rem 0 4rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .nav a {
+            padding: 0.8rem 1.8rem;
+            background-color: white;
+            color: var(--primary);
+            border-radius: 50px;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(67, 97, 238, 0.2);
+            font-size: 0.95rem;
+        }
+        
+        .nav a:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            text-decoration: none;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-highlight {
+            border-left: 5px solid var(--primary);
+            background-color: #f8f9fe;
+        }
+        
+        pre {
+         background: linear-gradient(135deg, var(--primary-dark), #190353);
+            color: #ffffff;
+            padding: 1.75rem;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 2rem 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            tab-size: 4;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        code {
+            font-family: 'Fira Code', monospace;
+            background-color: rgba(67, 97, 238, 0.1);
+            padding: 0.25em 0.5em;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            color: var(--primary-dark);
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        
+        .example {
+            background-color: #f0f7ff;
+            padding: 1.75rem;
+            border-radius: var(--radius-md);
+            margin: 2rem 0;
+            border-left: 5px solid var(--secondary);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .image-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2.5rem;
+            margin: 3rem 0;
+        }
+        
+        .image-card {
+            flex: 1 1 450px;
+            max-width: 60%;
+            background: white;
+            padding: 1.75rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: auto;
+            border-radius: var(--radius-md);
+            display: block;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .image-caption {
+            text-align: center;
+            margin-top: 1.25rem;
+            color: black;
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .feature-card h4 {
+            color: var(--primary);
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .conclusion-section {  
+             background: linear-gradient(135deg, var(--primary-dark), #240474);
+            color: rgb(0, 0, 0);
+            padding: 4rem 2.5rem;
+            border-radius: var(--radius-lg);
+            margin: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .conclusion-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(4, 43, 54, 0.1) 0%, transparent 70%);
+            z-index: 0;
+        }
+        
+        .conclusion-section h2 {
+            color: white;
+            position: relative;
+        }
+        
+        .conclusion-section h2::after {
+            background: var(--secondary);
+        }
+        
+        .conclusion-section p, 
+        .conclusion-section li {
+            color: rgba(255, 255, 255, 0.9);
+            position: relative;
+        }
+        
+        .key-findings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+            position: relative;
+        }
+        
+        .finding-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .finding-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .next-steps {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            margin-top: 2.5rem;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+        
+        #pp{
+            color:#f0f7ff;
+        }
+        footer {
+            text-align: center;
+            padding: 4rem 0;
+            margin-top: 5rem;
+           background: linear-gradient(135deg, var(--primary-dark), #240474);
+      
+           
+        }
+        
+      
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+                margin: 3rem 0 1.5rem;
+            }
+            
+            h3 {
+                font-size: 1.5rem;
+            }
+            
+            .nav {
+                flex-direction: column;
+                align-items: center;
+                margin: 2rem 0 3rem;
+                gap: 0.75rem;
+            }
+            
+            .nav a {
+                width: 100%;
+                text-align: center;
+                padding: 0.7rem;
+            }
+            
+            .card {
+                padding: 1.75rem;
+            }
+            
+            .image-container {
+                flex-direction: column;
+                gap: 1.5rem;
+                margin: 2rem 0;
+            }
+            
+            .image-card {
+                flex: 1 1 100%;
+                padding: 1.5rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .conclusion-section {
+                padding: 2.5rem 1.5rem;
+                margin: 3rem 0;
+            }
+            
+            footer {
+                padding: 3rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Étude: Architecture Python/PostgreSQL avec Psycopg2</h1>
+            <p>Méthodologie complète pour l'analyse et l'optimisation des applications bases de données</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="nav">
+            <a href="#introduction">Introduction</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#postgresql">PostgreSQL</a>
+            <a href="#psycopg2">Psycopg2</a>
+            <a href="#exemples">Exemples</a>
+        </div>
+        
+        <div class="card" id="introduction">
+            <section>
+                <h2>Introduction</h2>
+                <p>Cette étude présente une méthodologie moderne pour analyser et optimiser les interactions entre Python et PostgreSQL dans le contexte d'applications bureautiques professionnelles.</p>
+                
+                <h3>Objectifs principaux</h3>
+                <ul>
+                    <li><strong>Analyse approfondie</strong> des structures de bases de données existantes</li>
+                    <li><strong>Optimisation</strong> des performances des requêtes SQL</li>
+                    <li><strong>Sécurisation</strong> des échanges entre Python et PostgreSQL</li>
+                    <li><strong>Documentation</strong> complète du schéma relationnel</li>
+                </ul>
+                
+                <div class="grid">
+                    <div class="feature-card">
+                        <h4>Schéma relationnel</h4>
+                        <p>Reconstruction du modèle de données à partir du code existant avec analyse des relations entre tables et contraintes d'intégrité.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Interfaçage</h4>
+                        <p>Mécanismes avancés d'interaction Python/PostgreSQL via Psycopg2 avec gestion optimisée des connexions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Analyse SQL</h4>
+                        <p>Décryptage des requêtes embarquées dans le code avec recommandations d'optimisation.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section Architecture -->
+        <div class="card" id="architecture">
+            <section>
+                <h2>Architecture Moderne Python/PostgreSQL</h2>
+                <p>Diagramme clé illustrant l'interaction optimisée entre Python et PostgreSQL via Psycopg2 :</p>
+                
+                <div class="image-container">
+                    <div class="image-card">
+                        <img src="python_postgresql_connection_to_access_database.jpg" alt="Diagramme d'architecture Python DB API">
+                        <div class="image-caption">Figure 1: Architecture complète Python DB API avec Psycopg2</div>
+                    </div>
+                </div>
+                
+                <h3>Composants clés</h3>
+                <div class="grid">
+                    <div class="feature-card">
+                        <h4>Couche Application</h4>
+                        <p>Interface utilisateur (Tkinter/PyQt) et logique métier en Python avec séparation claire des responsabilités.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Psycopg2</h4>
+                        <p>Adaptateur haute performance pour PostgreSQL avec gestion avancée des transactions et pool de connexions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>PostgreSQL</h4>
+                        <p>Moteur de base de données relationnelle avec support des types avancés (JSON, géospatial) et extensions.</p>
+                    </div>
+                </div>
+                
+                <h3>Flux de données</h3>
+                <div class="example">
+                    <pre><code># Exemple de flux typique
+def get_data(project_id):
+    with psycopg2.connect(CONN_STR) as conn:  # 1. Établissement connexion
+        with conn.cursor() as cur:            # 2. Création curseur
+            cur.execute("""
+                SELECT * FROM projects 
+                JOIN details ON projects.id = details.project_id
+                WHERE projects.id = %s
+            """, (project_id,))               # 3. Exécution requête
+            
+            results = cur.fetchall()          # 4. Récupération données
+            return process_results(results)   # 5. Transformation données</code></pre>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section PostgreSQL -->
+        <div class="card" id="postgresql">
+            <section>
+                <h2>PostgreSQL - Puissance et Flexibilité</h2>
+                <p>PostgreSQL est un système de gestion de base de données relationnelle open-source offrant des fonctionnalités avancées pour les applications professionnelles.</p>
+                
+                <h3>Avantages clés</h3>
+                <ul>
+                    <li><strong>Robustesse</strong>: Stabilité éprouvée même avec des volumes de données importants</li>
+                    <li><strong>Types avancés</strong>: Support natif pour JSON, XML, géospatial, tableaux, etc.</li>
+                    <li><strong>Extensibilité</strong>: Création de types, fonctions et opérateurs personnalisés</li>
+                    <li><strong>Performances</strong>: Indexation avancée, partitionnement, parallélisation</li>
+                    <li><strong>Sécurité</strong>: RBAC fin, chiffrement, audit détaillé</li>
+                </ul>
+                
+                <h3>Installation et configuration</h3>
+                <div class="example">
+                    <pre><code># Installation sur Ubuntu/Debian
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Configuration de base
+sudo -u postgres psql -c "CREATE USER mon_user WITH PASSWORD 'motdepasse';"
+sudo -u postgres psql -c "CREATE DATABASE ma_base WITH OWNER mon_user;"
+
+# Configuration du fichier pg_hba.conf
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+host    all             all             192.168.1.0/24          md5</code></pre>
+                </div>
+                
+                <h3>Optimisations recommandées</h3>
+                <div class="grid">
+                    <div class="feature-card">
+                        <h4>Configuration mémoire</h4>
+                        <p>Ajuster shared_buffers (25% RAM) et effective_cache_size (75% RAM) dans postgresql.conf</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Indexation stratégique</h4>
+                        <p>Créer des index sur les colonnes fréquemment interrogées et utilisées dans les JOIN</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Maintenance régulière</h4>
+                        <p>Planifier VACUUM et ANALYZE automatiques avec autovacuum</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section Psycopg2 -->
+        <div class="card card-highlight" id="psycopg2">
+            <section>
+                <h2>Psycopg2 - Interface Optimisée</h2>
+                <p>Psycopg2 est l'adaptateur PostgreSQL le plus performant pour Python, offrant des fonctionnalités avancées pour les applications critiques.</p>
+                
+                <h3>Fonctionnalités avancées</h3>
+                <ul>
+                    <li><strong>Gestion des transactions</strong>: Commit/Rollback avec isolation configurable</li>
+                    <li><strong>Pool de connexions</strong>: Psycopg2.pool pour les applications haute disponibilité</li>
+                    <li><strong>Notifications</strong>: Système LISTEN/NOTIFY pour les événements temps réel</li>
+                    <li><strong>Copy Expert</strong>: Import/Export massif via COPY avec performances optimales</li>
+                    <li><strong>Préparation des requêtes</strong>: Pré-compilation pour exécution répétée</li>
+                </ul>
+
+               
+               <div class="card" id="psycopg2-pool">
+    <section>
+        <h2>Configuration avancée : Pool de connexions</h2>
+        <p>Le pool de connexions est essentiel pour optimiser les performances dans les applications avec un volume important de requêtes.</p>
+
+        <h3>Installation requise</h3>
+        <div class="example">
+            <pre><code># Installation de psycopg2 avec support du pooling
+pip install psycopg2-binary  # Version basique
+# OU pour une installation optimisée :
+pip install psycopg2[pool]  # Avec support natif du pooling</code></pre>
+        </div>
+
+        <h3>Implémentation complète</h3>
+        <div class="example">
+            <pre><code># config/database.py
+from psycopg2 import pool
+from contextlib import contextmanager
+import logging
+
+class DatabasePool:
+    def __init__(self):
+        self._pool = None
+    
+    def create_pool(self, **kwargs):
+        """Initialise le pool avec les paramètres de connexion"""
+        self._pool = pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=20,
+            **kwargs
+        )
+        logging.info("Pool de connexions PostgreSQL initialisé")
+
+    @contextmanager
+    def get_connection(self):
+        """Gestion contextuelle des connexions"""
+        conn = self._pool.getconn()
+        try:
+            yield conn
+        except Exception as e:
+            logging.error(f"Erreur de connexion: {e}")
+            conn.rollback()
+            raise
+        finally:
+            self._pool.putconn(conn)
+
+    def close_all(self):
+        """Ferme toutes les connexions du pool"""
+        self._pool.closeall()
+        logging.info("Toutes les connexions du pool ont été fermées")
+
+# Initialisation
+db_pool = DatabasePool()
+db_pool.create_pool(
+    host="localhost",
+    database="app_production",
+    user="app_user",
+    password="votre_motdepasse_securise",
+    port="5432",
+    connect_timeout=5
+)</code></pre>
+        </div>
+
+        <h3>Utilisation dans l'application</h3>
+        <div class="example">
+            <pre><code># services/data_service.py
+from config.database import db_pool
+
+def get_active_projects():
+    with db_pool.get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, name, status 
+                FROM projects 
+                WHERE status = %s 
+                ORDER BY created_at DESC
+            """, ('active',))
+            return cur.fetchall()
+
+def add_project(project_data):
+    with db_pool.get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO projects (name, status)
+                VALUES (%s, %s)
+                RETURNING id, created_at
+            """, (project_data['name'], 'draft'))
+            result = cur.fetchone()
+            conn.commit()
+            return result</code></pre>
+        </div>
+
+        <h3>Bonnes pratiques avancées</h3>
+        <div class="grid">
+            <div class="feature-card">
+                <h4>Taille du pool</h4>
+                <p>Configurer minconn/maxconn selon la charge :<br>
+                <code>minconn = CPU cores × 2</code><br>
+                <code>maxconn = CPU cores × 5</code></p>
+            </div>
+            <div class="feature-card">
+                <h4>Gestion des erreurs</h4>
+                <p>Implémenter un système de retry avec backoff exponentiel pour gérer les interruptions temporaires de connexion.</p>
+            </div>
+            <div class="feature-card">
+                <h4>Monitoring</h4>
+                <p>Surveiller les métriques :<br>
+                - Connexions actives<br>
+                - Temps d'attente<br>
+                - Taux de réutilisation</p>
+            </div>
+        </div>
+
+        <h3>Configuration de production</h3>
+        <div class="example">
+            <pre><code># Configuration type production
+DB_CONFIG = {
+    "minconn": 5,
+    "maxconn": 30,
+    "host": os.getenv('DB_HOST'),
+    "database": os.getenv('DB_NAME'),
+    "user": os.getenv('DB_USER'),
+    "password": os.getenv('DB_PASSWORD'),
+    "port": os.getenv('DB_PORT', '5432'),
+    "options": f"-c search_path={os.getenv('DB_SCHEMA', 'public')}",
+    "connect_timeout": 3,
+    "keepalives": 1,
+    "keepalives_idle": 30,
+    "keepalives_interval": 10,
+    "keepalives_count": 5
+}</code></pre>
+        </div>
+    </section>
+</div>
+                
+                <h3>Sécurité et performances</h3>
+                <div class="grid">
+                    <div class="feature-card">
+                        <h4>Prévention injections SQL</h4>
+                        <p>Toujours utiliser les paramètres (%s) plutôt que l'interpolation de chaînes</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Gestion des erreurs</h4>
+                        <p>Implémenter un système de retry pour les connexions instables</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Transactions</h4>
+                        <p>Définir explicitement les niveaux d'isolation selon les besoins</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section Exemples -->
+        <div class="card" id="exemples">
+            <section>
+                <h2>Exemples Concrets</h2>
+                <p>Analyse détaillée de tables spécifiques avec exemples d'interactions optimisées.</p>
+                
+                <h3>Table FicheTechnique</h3>
+                <div class="example">
+                    <pre><code>CREATE TABLE FicheTechnique (
+    id SERIAL PRIMARY KEY,
+    projet_id INT NOT NULL,
+    name TEXT NOT NULL,
+    type VARCHAR(50),
+    bassin VARCHAR(100),
+    formation VARCHAR(100),
+    profondeur DECIMAL(10,2),
+    plateau DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (projet_id) REFERENCES Projet(id) ON DELETE CASCADE
+);
+
+-- Index recommandés
+CREATE INDEX idx_fiche_projet ON FicheTechnique(projet_id);
+CREATE INDEX idx_fiche_type ON FicheTechnique(type);</code></pre>
+                </div>
+                
+                <h3>Interactions optimisées</h3>
+                <div class="example">
+                    <pre><code># Insertion avec retour des valeurs générées
+def create_fiche(conn, projet_id, data):
+    query = """
+    INSERT INTO FicheTechnique 
+    (projet_id, name, type, bassin, formation, profondeur, plateau)
+    VALUES (%(projet_id)s, %(name)s, %(type)s, %(bassin)s, %(formation)s, %(profondeur)s, %(plateau)s)
+    RETURNING id, created_at
+    """
+    with conn.cursor() as cur:
+        cur.execute(query, {
+            'projet_id': projet_id,
+            'name': data['name'],
+            'type': data.get('type'),
+            'bassin': data.get('bassin'),
+            'formation': data.get('formation'),
+            'profondeur': data.get('profondeur'),
+            'plateau': data.get('plateau')
+        })
+        return cur.fetchone()
+
+# Requête paginée avec prévention des injections
+def get_fiches_paginated(conn, projet_id, page=1, per_page=20):
+    offset = (page - 1) * per_page
+    query = """
+    SELECT id, name, type, bassin, formation, profondeur, plateau
+    FROM FicheTechnique
+    WHERE projet_id = %s
+    ORDER BY created_at DESC
+    LIMIT %s OFFSET %s
+    """
+    with conn.cursor() as cur:
+        cur.execute(query, (projet_id, per_page, offset))
+        return cur.fetchall()</code></pre>
+                </div>
+                
+                <h3>Table des coûts (structure complexe)</h3>
+                <div class="example">
+                    <pre><code>CREATE TABLE couts_scenarion_p50(
+    annee_id INTEGER PRIMARY KEY,
+    projet_id INTEGER NOT NULL,
+    supply_chain_id INTEGER NOT NULL,
+    capex_id INTEGER,
+    apex_id INTEGER,
+    opex_id INTEGER,
+    -- Métriques financières
+    forage NUMERIC(12,5),
+    frac NUMERIC(12,5),
+    manifod NUMERIC(12,5),
+    manifod_rassemblement NUMERIC(12,5),
+    -- Autres champs...
+    total_ms NUMERIC(15,2),
+    date_mise_ajour TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Contraintes
+    FOREIGN KEY (projet_id) REFERENCES Projet(id) ON DELETE CASCADE,
+    FOREIGN KEY (supply_chain_id) REFERENCES supply_chaine(id),
+    FOREIGN KEY (capex_id) REFERENCES Capex(id),
+    FOREIGN KEY (apex_id) REFERENCES Apex(id),
+    FOREIGN KEY (opex_id) REFERENCES Opex(id),
+    -- Contrainte unique
+    UNIQUE (projet_id, annee_id)
+);
+
+-- Index composite pour les requêtes fréquentes
+CREATE INDEX idx_couts_projet_annee ON couts_scenarion_p50(projet_id, annee_id);</code></pre>
+                </div>
+                
+                <h3>Mise à jour transactionnelle</h3>
+                <div class="example">
+                    <pre><code># Mise à jour transactionnelle avec gestion d'erreur
+def update_cout_annee(conn, annee_id, cout_data):
+    try:
+        with conn.cursor() as cur:
+            # Désactiver autocommit pour contrôle manuel
+            conn.autocommit = False
+            
+            # Vérifier l'existence
+            cur.execute("SELECT 1 FROM couts_scenarion_p50 WHERE annee_id = %s FOR UPDATE", (annee_id,))
+            if not cur.fetchone():
+                raise ValueError("Année spécifiée non trouvée")
+            
+            # Mise à jour
+            cur.execute("""
+                UPDATE couts_scenarion_p50
+                SET forage = %(forage)s,
+                    frac = %(frac)s,
+                    manifod = %(manifod)s,
+                    manifod_rassemblement = %(manifod_rassemblement)s,
+                    total_ms = %(total_ms)s,
+                    date_mise_ajour = NOW()
+                WHERE annee_id = %(annee_id)s
+                RETURNING annee_id, total_ms
+            """, cout_data)
+            
+            # Valider la transaction
+            conn.commit()
+            return cur.fetchone()
+            
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.autocommit = True</code></pre>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Section Conclusion -->
+        <section id="conclusion" class="conclusion-section">
+            <div class="container">
+                <h2>Conclusion et Perspectives</h2>
+                
+                <div class="key-findings">
+                    <div class="finding-card">
+                        <h4 id="conc">PostgreSQL</h4>
+                        <p>La structure relationnelle avancée permet une intégrité des données exceptionnelle, avec des performances optimisées grâce aux index stratégiques et au partitionnement.</p>
+                    </div>
+                    
+                    <div class="finding-card">
+                        <h4 id="conc">Psycopg2</h4>
+                        <p>L'adaptateur offre une interface hautement performante entre Python et PostgreSQL, avec des fonctionnalités avancées comme le connection pooling et la gestion fine des transactions.</p>
+                    </div>
+                    
+                    <div class="finding-card">
+                        <h4 id="conc">Architecture</h4>
+                        <p>La séparation claire entre couches applicatives permet une maintenance simplifiée et une évolution aisée du système, tout en garantissant des performances optimales.</p>
+                    </div>
+                </div>
+
+                <div class="next-steps">
+                    <h3 id="conc">Pistes d'amélioration avancées</h3>
+                    <ol>
+                        <li><strong id="conc">Monitoring</strong>: Implémenter un système de surveillance des requêtes lentes avec pg_stat_statements</li>
+                        <li><strong id="conc">Documentation</strong>: Générer automatiquement la documentation du schéma avec SchemaSpy</li>
+                        <li><strong id="conc">Tests</strong>: Mettre en place des tests d'intégration complets avec données factices</li>
+                        <li><strong id="conc">ORM</strong>: Évaluer SQLAlchemy pour les parties complexes nécessitant un mapping objet-relationnel</li>
+                        <li><strong id="conc">Réplication</strong>: Configurer une réplication pour haute disponibilité</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p id="pp">Étude réalisée par Sellami Siham - 2025</p>
+            <p id="pp">Optimisation des architectures Python/PostgreSQL pour applications métier</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation douce au scroll
+            const animateOnScroll = () => {
+                const elements = document.querySelectorAll('.card, .feature-card, .finding-card');
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.opacity = 1;
+                            entry.target.style.transform = 'translateY(0)';
+                        }
+                    });
+                }, { 
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -100px 0px'
+                });
+                
+                elements.forEach(el => {
+                    el.style.opacity = 0;
+                    el.style.transform = 'translateY(30px)';
+                    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                    observer.observe(el);
+                });
+            };
+            
+            // Navigation fluide
+            const smoothScroll = () => {
+                document.querySelectorAll('.nav a').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href');
+                        const targetElement = document.querySelector(targetId);
+                        
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Mise en évidence de l'élément cible
+                        if (targetElement.classList.contains('card')) {
+                            targetElement.style.boxShadow = '0 0 0 3px rgba(76, 201, 240, 0.5)';
+                            setTimeout(() => {
+                                targetElement.style.boxShadow = '';
+                            }, 2000);
+                        }
+                    });
+                });
+            };
+            
+            animateOnScroll();
+            smoothScroll();
+            
+            // Ajout d'un bouton "Retour en haut"
+            const backToTop = document.createElement('div');
+            backToTop.innerHTML = '↑';
+            backToTop.style.position = 'fixed';
+            backToTop.style.bottom = '2rem';
+            backToTop.style.right = '2rem';
+            backToTop.style.width = '3rem';
+            backToTop.style.height = '3rem';
+            backToTop.style.backgroundColor = 'var(--primary)';
+            backToTop.style.color = 'white';
+            backToTop.style.borderRadius = '50%';
+            backToTop.style.display = 'flex';
+            backToTop.style.justifyContent = 'center';
+            backToTop.style.alignItems = 'center';
+            backToTop.style.cursor = 'pointer';
+            backToTop.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            backToTop.style.opacity = '0';
+            backToTop.style.transition = 'opacity 0.3s ease';
+            backToTop.style.zIndex = '1000';
+            
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            document.body.appendChild(backToTop);
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 500) {
+                    backToTop.style.opacity = '1';
+                } else {
+                    backToTop.style.opacity = '0';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
