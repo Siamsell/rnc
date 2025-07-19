@@ -42,7 +42,7 @@
         .container {
             max-width: 1250px;
             margin: 0 auto;
-            padding: 0 1 rem;
+            padding: 0 1rem;
             color:#f5f7ff;
         }
         #conc{
@@ -90,7 +90,7 @@
         h2 {
             font-size: 2.2rem;
             color: var(--primary-dark);
-         font-family: Georgia, 'Times New Roman', Times, serif;
+            font-family: Georgia, 'Times New Roman', Times, serif;
             margin: 3.5rem 0 2rem;
             position: relative;
             padding-bottom: 0.75rem;
@@ -208,7 +208,7 @@
         }
         
         pre {
-         background: linear-gradient(135deg, var(--primary-dark), #190353);
+            background: linear-gradient(135deg, var(--primary-dark), #190353);
             color: #ffffff;
             padding: 1.75rem;
             border-radius: var(--radius-md);
@@ -346,7 +346,6 @@
             color:white;
         }
         
-        
         .conclusion-section p, 
         .conclusion-section li {
             color: rgba(255, 255, 255, 0.9);
@@ -391,12 +390,8 @@
             text-align: center;
             padding: 4rem 0;
             margin-top: 5rem;
-           background: linear-gradient(135deg, var(--primary-dark), #240474);
-      
-           
+            background: linear-gradient(135deg, var(--primary-dark), #240474);
         }
-        
-      
         
         @media (max-width: 768px) {
             .container {
@@ -457,6 +452,13 @@
             footer {
                 padding: 3rem 0;
             }
+        }
+
+        /* Correction spécifique pour la section Psycopg2 */
+        #psycopg2 {
+            opacity: 1 !important;
+            transform: none !important;
+            display: block !important;
         }
     </style>
 </head>
@@ -584,8 +586,8 @@ sudo -u postgres psql -c "CREATE DATABASE ma_base WITH OWNER mon_user;"
 host    all             all             192.168.1.0/24          md5</code></pre>
                 </div>
                 <h3>Installation et configuration sous Windows</h3>
-<div class="example">
-    <pre><code># Téléchargement et installation
+                <div class="example">
+                    <pre><code># Téléchargement et installation
 1. Télécharger le package d'installation depuis <a id="w" href="https://www.postgresql.org/download/windows/" target="_blank">postgresql.org/download/windows/</a>
 2. Exécuter le fichier .exe et suivre l'assistant
 3. Spécifier le mot de passe pour l'utilisateur postgres
@@ -600,7 +602,7 @@ CREATE DATABASE ma_base WITH OWNER mon_user;
 # (Situé dans C:\Program Files\PostgreSQL\version\data)
 # TYPE  DATABASE  USER      ADDRESS       METHOD
 host   all        all       192.168.1.0/24 md5</code></pre>
-</div>
+                </div>
                 
                 <h3>Optimisations recommandées</h3>
                 <div class="grid">
@@ -620,7 +622,7 @@ host   all        all       192.168.1.0/24 md5</code></pre>
             </section>
         </div>
 
-        <!-- Section Psycopg2 -->
+        <!-- Section Psycopg2 - CORRIGÉE -->
         <div class="card card-highlight" id="psycopg2">
             <section>
                 <h2>Psycopg2 - Interface Optimisée</h2>
@@ -635,142 +637,162 @@ host   all        all       192.168.1.0/24 md5</code></pre>
                     <li><strong>Préparation des requêtes</strong>: Pré-compilation pour exécution répétée</li>
                 </ul>
 
-               
-               <div class="card" id="psycopg2-pool">
-    <section>
-        <h2>Configuration avancée : Pool de connexions</h2>
-        <p>Le pool de connexions est essentiel pour optimiser les performances dans les applications avec un volume important de requêtes.</p>
-
-        <h3>Installation requise</h3>
-        <div class="example">
-            <pre><code># Installation de psycopg2 avec support du pooling
+                <!-- Sous-section Pool de connexions -->
+                <div class="card" id="psycopg2-pool">
+                    <section>
+                        <h3>Pool de Connexions</h3>
+                        <p><strong>Définition :</strong> Un pool de connexions maintient un ensemble de connexions actives réutilisables, améliorant significativement les performances en évitant la création/destruction répétée de connexions.</p>
+                        
+                        <h4>Installation requise</h4>
+                        <div class="example">
+                            <pre><code># Installation de psycopg2 avec support du pooling
 pip install psycopg2-binary  # Version basique
 # OU pour une installation optimisée :
 pip install psycopg2[pool]  # Avec support natif du pooling</code></pre>
-        </div>
+                        </div>
 
-        <h3>Implémentation complète</h3>
-        <div class="example">
-            <pre><code># config/database.py
-from psycopg2 import pool
-from contextlib import contextmanager
-import logging
+                        <h4>Implémentation du pool</h4>
+                        <div class="example">
+                            <pre><code>from psycopg2 import pool
 
-class DatabasePool:
-    def __init__(self):
-        self._pool = None
-    
-    def create_pool(self, **kwargs):
-        """Initialise le pool avec les paramètres de connexion"""
-        self._pool = pool.ThreadedConnectionPool(
-            minconn=1,
-            maxconn=20,
-            **kwargs
-        )
-        logging.info("Pool de connexions PostgreSQL initialisé")
-
-    @contextmanager
-    def get_connection(self):
-        """Gestion contextuelle des connexions"""
-        conn = self._pool.getconn()
-        try:
-            yield conn
-        except Exception as e:
-            logging.error(f"Erreur de connexion: {e}")
-            conn.rollback()
-            raise
-        finally:
-            self._pool.putconn(conn)
-
-    def close_all(self):
-        """Ferme toutes les connexions du pool"""
-        self._pool.closeall()
-        logging.info("Toutes les connexions du pool ont été fermées")
-
-# Initialisation
-db_pool = DatabasePool()
-db_pool.create_pool(
+# Configuration du pool
+connection_pool = pool.ThreadedConnectionPool(
+    minconn=1,
+    maxconn=10,
     host="localhost",
-    database="app_production",
-    user="app_user",
-    password="votre_motdepasse_securise",
-    port="5432",
-    connect_timeout=5
-)</code></pre>
-        </div>
+    database="ma_db",
+    user="user",
+    password="pass"
+)
 
-        <h3>Utilisation dans l'application</h3>
-        <div class="example">
-            <pre><code># services/data_service.py
-from config.database import db_pool
-
-def get_active_projects():
-    with db_pool.get_connection() as conn:
+# Utilisation typique
+def query_with_pool():
+    conn = connection_pool.getconn()
+    try:
         with conn.cursor() as cur:
-            cur.execute("""
-                SELECT id, name, status 
-                FROM projects 
-                WHERE status = %s 
-                ORDER BY created_at DESC
-            """, ('active',))
+            cur.execute("SELECT * FROM table")
             return cur.fetchall()
+    finally:
+        connection_pool.putconn(conn)</code></pre>
+                        </div>
+                    </section>
+                </div>
 
-def add_project(project_data):
-    with db_pool.get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO projects (name, status)
-                VALUES (%s, %s)
-                RETURNING id, created_at
-            """, (project_data['name'], 'draft'))
-            result = cur.fetchone()
-            conn.commit()
-            return result</code></pre>
-        </div>
+                <!-- Nouvelle section sur les curseurs -->
+                <div class="card" id="psycopg2-cursors">
+                    <section>
+                        <h3>Gestion des Curseurs (Cursors)</h3>
+                        
+                        <p><strong>Définition :</strong> Un curseur est un objet qui permet de parcourir les résultats d'une requête SQL ligne par ligne, plutôt que de charger tous les résultats en mémoire simultanément.</p>
+                        
+                        <h4>Types de Curseurs</h4>
+                        <div class="grid">
+                            <div class="feature-card">
+                                <h4>Curseur Standard</h4>
+                                <p>Charge tous les résultats en mémoire</p>
+                                <pre><code>cur = conn.cursor()</code></pre>
+                            </div>
+                            <div class="feature-card">
+                                <h4>Curseur Serveur</h4>
+                                <p>Ne charge que les résultats nécessaires</p>
+                                <pre><code>cur = conn.cursor('cursor_name')</code></pre>
+                            </div>
+                            <div class="feature-card">
+                                <h4>Curseur Dict</h4>
+                                <p>Retourne des dictionnaires au lieu de tuples</p>
+                                <pre><code>cur = conn.cursor(
+    cursor_factory=psycopg2.extras.DictCursor)</code></pre>
+                            </div>
+                        </div>
 
-        <h3>Bonnes pratiques avancées</h3>
-        <div class="grid">
-            <div class="feature-card">
-                <h4>Taille du pool</h4>
-                <p>Configurer minconn/maxconn selon la charge :<br>
-                <code>minconn = CPU cores × 2</code><br>
-                <code>maxconn = CPU cores × 5</code></p>
-            </div>
-            <div class="feature-card">
-                <h4>Gestion des erreurs</h4>
-                <p>Implémenter un système de retry avec backoff exponentiel pour gérer les interruptions temporaires de connexion.</p>
-            </div>
-            <div class="feature-card">
-                <h4>Monitoring</h4>
-                <p>Surveiller les métriques :<br>
-                - Connexions actives<br>
-                - Temps d'attente<br>
-                - Taux de réutilisation</p>
-            </div>
-        </div>
+                        <h4>Fonctions Principales</h4>
+                        <div class="example">
+                            <pre><code># Création d'un curseur
+cur = conn.cursor()
 
-        <h3>Configuration de production</h3>
-        <div class="example">
-            <pre><code># Configuration type production
-DB_CONFIG = {
-    "minconn": 5,
-    "maxconn": 30,
-    "host": os.getenv('DB_HOST'),
-    "database": os.getenv('DB_NAME'),
-    "user": os.getenv('DB_USER'),
-    "password": os.getenv('DB_PASSWORD'),
-    "port": os.getenv('DB_PORT', '5432'),
-    "options": f"-c search_path={os.getenv('DB_SCHEMA', 'public')}",
-    "connect_timeout": 3,
-    "keepalives": 1,
-    "keepalives_idle": 30,
-    "keepalives_interval": 10,
-    "keepalives_count": 5
-}</code></pre>
-        </div>
-    </section>
-</div>
-                
+# Exécution de requête
+cur.execute("SELECT * FROM table")
+
+# Récupération des résultats
+cur.fetchone()    # Une seule ligne
+cur.fetchmany(5)  # 5 lignes
+cur.fetchall()    # Toutes les lignes
+
+# Parcours itératif
+for record in cur:
+    print(record)
+
+# Fermeture
+cur.close()
+
+# Gestion contextuelle (recommandé)
+with conn.cursor() as cur:
+    cur.execute("...")
+    # Le curseur se ferme automatiquement</code></pre>
+                        </div>
+
+                        <h4>Bonnes Pratiques</h4>
+                        <ul>
+                            <li>Toujours fermer les curseurs avec <code>close()</code> ou utiliser un contexte <code>with</code></li>
+                            <li>Pour les gros résultats, préférer les curseurs serveur</li>
+                            <li>Utiliser <code>fetchmany()</code> pour limiter la consommation mémoire</li>
+                            <li>Pour les applications web, un curseur par requête</li>
+                        </ul>
+
+                        <h4>Exemple Complet</h4>
+                        <div class="example">
+                            <pre><code>import psycopg2
+from psycopg2 import extras
+
+conn = psycopg2.connect("dbname=test user=postgres")
+
+# Curseur dictionnaire avec gestion automatique
+with conn.cursor(
+    cursor_factory=extras.DictCursor
+) as cur:
+    
+    # Exécution avec paramètres sécurisés
+    cur.execute("""
+        SELECT id, name, email 
+        FROM users 
+        WHERE status = %s 
+        LIMIT %s
+    """, ('active', 10))
+    
+    # Parcours par lot de 3
+    while True:
+        records = cur.fetchmany(3)
+        if not records:
+            break
+        
+        for user in records:
+            print(f"ID: {user['id']}, Nom: {user['name']}")
+            # Accès par clé comme un dictionnaire
+
+# La connexion reste ouverte, seul le curseur est fermé</code></pre>
+                        </div>
+                    </section>
+                </div>
+                      <h4>Connexion de base</h4>
+                <div class="example">
+                    <pre><code>import psycopg2
+
+# Paramètres de connexion
+conn_params = {
+    "host": "localhost",
+    "database": "ma_base",
+    "user": "mon_user",
+    "password": "secret"
+}
+
+# Établir la connexion
+try:
+    conn = psycopg2.connect(**conn_params)
+    print("Connexion réussie!")
+    # ... utilisation de la connexion
+finally:
+    if conn: conn.close()</code></pre>
+                </div>
                 <h3>Sécurité et performances</h3>
                 <div class="grid">
                     <div class="feature-card">
@@ -963,16 +985,16 @@ def update_cout_annee(conn, annee_id, cout_data):
     <footer>
         <div class="container">
             <p id="pp">Étude réalisée par Sellami Siham - 2025</p>
-               <p id="pp">Supervisée par Babaci Farida</p>
+            <p id="pp">Supervisée par Babaci Farida</p>
             <p id="pp">Optimisation des architectures Python/PostgreSQL pour applications métier</p>
         </div>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Animation douce au scroll
+            // Animation douce au scroll - Exclut explicitement #psycopg2
             const animateOnScroll = () => {
-                const elements = document.querySelectorAll('.card, .feature-card, .finding-card');
+                const elements = document.querySelectorAll('.card:not(#psycopg2), .feature-card, .finding-card');
                 
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
@@ -1057,6 +1079,14 @@ def update_cout_annee(conn, annee_id, cout_data):
                     backToTop.style.opacity = '0';
                 }
             });
+
+            // Force l'affichage de la section Psycopg2
+            const psycopgSection = document.getElementById('psycopg2');
+            if (psycopgSection) {
+                psycopgSection.style.opacity = '1';
+                psycopgSection.style.transform = 'none';
+                psycopgSection.style.display = 'block';
+            }
         });
     </script>
 </body>
